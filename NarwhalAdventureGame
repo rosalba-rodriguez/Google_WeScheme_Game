@@ -1,0 +1,335 @@
+(require bootstrap2012/bootstrap-teachpack)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; DATA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;; The World is a (make-world ....)
+;world-narwhal-x : world -> number
+;world-narwhal-y : world-> number
+; world-snake-y : world-> number
+; world-shark-y : world-> number
+; world-seahorse-x : world-> number
+(define-struct world (narwhal-x narwhal-y snake-y shark-y seahorse-x ship-x level))
+
+
+;; Make *at least two* example Worlds
+(define START (make-world 0 250 0 500 -100 970 1))
+(define NEXT (make-world 0 250 500 0 300  100 1))
+(define RESET (make-world 20 39 67 -1 300 100 1))
+(define LEVEL (make-world 0 250 0 500 300 100 1))
+
+
+
+
+
+
+;; define shortcuts for your game images here
+(define NARWHAL (bitmap/url "https://s3.amazonaws.com/cloud.ohloh.net/attachments/34065/narwhal-512_med.png"))
+(define SNAKE (bitmap/url "http://www.androidfreeware.net/software_images/kudos-snake-free.thumb.png"))
+(define SHARK (bitmap/url "http://ffxiv.gamerescape.com/wiki/images/ffxiv/thumb/d/d5/Hammerhead_Shark_Icon.png/50px-Hammerhead_Shark_Icon.png"))
+(define BACKGROUND (bitmap/url "http://fc01.deviantart.net/fs71/i/2010/192/7/1/Midnight_Ocean_Stock_by_xannoyingx.jpg"))
+(define SEAHORSE (bitmap/url "http://lh5.ggpht.com/-5aml0x9YOKk/S-wMhr8KpqI/AAAAAAAACw0/A7YbxrAX0SQ/s128/seahorse.png"))
+(define SHIP (bitmap/url "http://images3.wikia.nocookie.net/__cb20110724061315/ageofempiresonline/images/7/7d/FireShipEgyptian.png"))
+(define LOSE (bitmap/url "http://www.roadkilltshirts.com/Assets/ProductImages/THE_GAME.jpg"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GRAPHICS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; draw-world: World -> Image
+
+(define (draw-world w)
+  (cond 
+    [(game-over w)
+     (put-image LOSE
+                450 250
+                BACKGROUND)]
+    [else 
+(put-image NARWHAL
+           (world-narwhal-x w) (world-narwhal-y w)
+           (put-image SNAKE 
+                      200 (world-snake-y w)
+                      (put-image SHARK
+                                 600 (world-shark-y w)
+                                 (put-image SEAHORSE
+                                            (world-seahorse-x w) 300
+                                            (put-image SHIP
+                                                       (world-ship-x w) 100
+                                                       BACKGROUND)))))]))
+
+;; given a world, draw a frame of the game
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; UPDATING
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; update-world: World -> World
+;; given a world, produce the next one
+(EXAMPLE (update-world START) 
+         ( make-world (world-narwhal-x START)
+                      (world-narwhal-y START)
+                      (+(world-snake-y START)3)
+                      (-(world-shark-y START) 3)
+                      (world-seahorse-x START)
+                      (world-ship-x START) 
+                      (world-level START)))
+
+
+
+
+
+(EXAMPLE (update-world NEXT) 
+         ( make-world (world-narwhal-x NEXT)
+                      (world-narwhal-y NEXT)
+                      (+(world-snake-y NEXT)3)
+                      (- ( world-shark-y NEXT) 3)
+                      (world-seahorse-x NEXT) 
+                      (world-ship-x NEXT) 
+                      (world-level NEXT)))
+
+
+(EXAMPLE (update-world RESET) 
+         ( make-world (world-narwhal-x RESET)
+                      (world-narwhal-y RESET)
+                      (world-snake-y RESET)
+                      500
+                      (world-seahorse-x RESET)
+                      (world-ship-x RESET)
+                      (world-level RESET)))
+
+(define (update-world w )
+  (cond
+    [(> (world-narwhal-x w) 900) 
+     (make-world 0
+                 (world-narwhal-y w)
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (+ (world-level w) 1))]
+    
+    [(< (world-narwhal-x w) 0) 
+     (make-world 0
+                 (world-narwhal-y w)
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(> (world-narwhal-y w) 500) 
+     (make-world (world-narwhal-x w)
+                 0
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(< (world-narwhal-y w) 0) 
+     (make-world (world-narwhal-x w)
+                 500
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(< (world-shark-y w) 0) 
+     (make-world (world-narwhal-x w)
+                 (world-narwhal-y w)
+                 (world-snake-y w)
+                 500
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(> (world-snake-y w) 500) 
+     (make-world (world-narwhal-x w)
+                 (world-narwhal-y w)
+                 0
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(> (world-seahorse-x w) 900)
+     (make-world (world-narwhal-x w)
+                 (world-narwhal-y w)
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 0
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(< (world-ship-x w) 0)
+     (make-world (world-narwhal-x w)
+                 (world-narwhal-y w)
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 900
+                 (world-level w))]
+    
+    
+    
+    
+    [else (make-world (world-narwhal-x w)
+                      (world-narwhal-y w)
+                      (+(world-snake-y w) (* (world-level w)3))
+                      (-(world-shark-y w) (* (world-level w)3))
+                      ; tells the seahorse next x 
+                      (cond
+                        [(> (world-level w) 1) (+(world-seahorse-x w) (* (world-level w) 3))]
+                        [else (world-seahorse-x w)])
+                      ; tells the ship next x
+                      (cond
+                        [(> (world-level w) 2) (- (world-ship-x w) (* (world-level w) 4))]
+                        [else (world-ship-x w)])
+                      (world-level w))]))
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EVENTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; game-over? : World -> Boolean
+;; Should the program end?
+(define (distance x1 y1 x2 y2)
+  (sqrt (+(sqr ( - x2 x1)) (sqr ( - y2 y1)))))
+
+(define (game-over w)
+  (or (< (distance (world-narwhal-x w) 
+                   ( world-narwhal-y w)
+                   200 
+                   (world-snake-y w))
+         50)
+      
+      (< (distance (world-narwhal-x w) 
+                   ( world-narwhal-y w)
+                   600
+                   (world-shark-y w))
+         50) 
+      
+      (< (distance (world-narwhal-x w) 
+                   (world-narwhal-y w)
+                   (world-seahorse-x w)
+                   300)     
+         50)
+      
+      (< (distance (world-narwhal-x w) 
+                   (world-narwhal-y w)
+                   100
+                   (world-ship-x w))
+         
+         50)))
+
+
+
+
+
+;; keypress : World String -> World
+;; how should the world change, for each key?
+(EXAMPLE ( keypress START "left")
+         ( make-world  (- (world-narwhal-x START) 30)
+                       (world-narwhal-y START)
+                       (world-snake-y START)
+                       (world-shark-y START) 
+                       (world-seahorse-x START)
+                       (world-ship-x START)
+                       (world-level START)))
+
+(EXAMPLE (keypress NEXT "right")
+         (make-world (+ (world-narwhal-x NEXT) 30)
+                     (world-narwhal-y NEXT)
+                     (world-snake-y NEXT)
+                     (world-shark-y NEXT)
+                     (world-seahorse-x NEXT)
+                     (world-ship-x NEXT)
+                     (world-level NEXT)))
+
+(EXAMPLE (keypress NEXT "up")
+         (make-world ( world-narwhal-x NEXT)
+                     (+ (world-narwhal-y NEXT) 30)
+                     (world-snake-y NEXT)
+                     (world-shark-y NEXT)
+                     (world-seahorse-x NEXT)
+                     (world-ship-x NEXT)
+                     (world-level NEXT)))
+
+(EXAMPLE (keypress NEXT "down")
+         (make-world (world-narwhal-x NEXT)
+                     (- (world-narwhal-y NEXT) 30)
+                     (world-snake-y NEXT)
+                     (world-shark-y NEXT)
+                     (world-seahorse-x NEXT)
+                     (world-ship-x NEXT) 
+                     (world-level NEXT)))
+
+
+
+(define (keypress w key)
+  (cond
+    [(string=? key "left") 
+     ( make-world  (- (world-narwhal-x w) 30)
+                   (world-narwhal-y w)
+                   (world-snake-y w)
+                   (world-shark-y w)
+                   (world-seahorse-x w)
+                   (world-ship-x w)
+                   (world-level w))]
+    
+    
+    [(string=? key "right")
+     (make-world (+ (world-narwhal-x w) 30)
+                 (world-narwhal-y w)
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(string=? key "up")
+     (make-world (world-narwhal-x w)
+                 (+ (world-narwhal-y w) 30)
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    [(string=? key "down")
+     (make-world (world-narwhal-x w)
+                 (- (world-narwhal-y w) 30)
+                 (world-snake-y w)
+                 (world-shark-y w)
+                 (world-seahorse-x w)
+                 (world-ship-x w)
+                 (world-level w))]
+    
+    
+    [else ( w)])) 
+
+(big-bang START
+          (on-tick update-world)
+          (on-redraw draw-world)
+          (stop-when game-over)
+          (on-key keypress))
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; big-bang using the START world
+;; don't forget the event-handlers for on-tick,
+;; on-redraw, on-key and stop-when!
